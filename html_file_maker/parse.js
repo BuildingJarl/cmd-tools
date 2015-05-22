@@ -3,6 +3,7 @@
 var fs = require('fs');
 
 var regOne = /<[^/].+?(?=>)./g;
+var idIndex = 0;
 
 var args = process.argv.slice(2);
 var htmlFileName = args[0];
@@ -14,32 +15,36 @@ if(!htmlFileName) {
 
 // 1) load ID file
 console.log('loading IDs');
-var ids = readFile('./ids.txt').split('/n');
+var ids = readFile('./ids.txt');
+ids = ids.split('\n');
 
 // 2) load HTML
 console.log('loading HTML');
-var html = readFile( './input/' + htmlFileName + '.html' ).split('/n');
+var html = readFile( './input/' + htmlFileName + '.html' );
 
-for( var i = 0; i < html.length; i ++ ) {
+html = html.replace( regOne, function( match ) {
 
-  // 3) clean each line
-  //if opening tag delete all attributes and add id = randomId
-  var line = html[i];
+  var index = match.indexOf(' ');
 
-  //line.replace( reg, func or substring )
+  if(index === -1 ) {
 
-  line.replace( regOne , function( match, offset, string ) {
-    
-    var first = line.slice( 0, offset);
-    var last = line.slice( match.length );
+    match = match.slice( 0, match.indexOf('<') -1 );
+    match += ' ';
+    match += 'id="' + getNextId() + '"';
+    match += '>';
+  } else {
+    match = match.slice(0, index);
+    match += ' ';
+    match += 'id="' + getNextId() + '"';
+    match += '>';
+  }
 
-    html[i] = [ first, '<hello>', last].join('');
-  });
-}
+  return match;
+});
 
 // 4) Save
 console.log("saving file");
-writeFile( './output/' + htmlFileName + '.html', html.join('/n') );
+writeFile( './output/' + htmlFileName + '.html', html );
 
 /* --------------------------------- */
 
@@ -56,4 +61,11 @@ function writeFile( path, data ) {
           console.log("The file was successfully saved!");
       }
   });
+}
+
+function getNextId() {
+
+  var temp = ids[idIndex];
+  idIndex++;
+  return temp;
 }
