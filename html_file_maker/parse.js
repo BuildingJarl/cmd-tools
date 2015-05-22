@@ -1,5 +1,8 @@
+'use strict';
+
 var fs = require('fs');
 
+var regOne = /<[^/].+?(?=>)./g;
 
 var args = process.argv.slice(2);
 var htmlFileName = args[0];
@@ -9,20 +12,48 @@ if(!htmlFileName) {
 	process.exit();
 }
 
-/*
- 1) load html file
- 2) load id file
- 3) for each tag delete all of its attributes and add id=nextIDInArrary
-*/
+// 1) load ID file
+console.log('loading IDs');
+var ids = readFile('./ids.txt').split('/n');
 
-fs.readFile( htmlFileName + '.html', function (err, data) {
-  if (err) {
-    throw err; 
-  }
-  console.log(data.toString());
-  //do parsing in here
-  //find all opening tags
-  // remove everything until >
-  // add id="valuefromfile"
-  //write new file
-});
+// 2) load HTML
+console.log('loading HTML');
+var html = readFile( './input/' + htmlFileName + '.html' ).split('/n');
+
+for( var i = 0; i < html.length; i ++ ) {
+
+  // 3) clean each line
+  //if opening tag delete all attributes and add id = randomId
+  var line = html[i];
+
+  //line.replace( reg, func or substring )
+
+  line.replace( regOne , function( match, offset, string ) {
+    
+    var first = line.slice( 0, offset);
+    var last = line.slice( match.length );
+
+    html[i] = [ first, '<hello>', last].join('');
+  });
+}
+
+// 4) Save
+console.log("saving file");
+writeFile( './output/' + htmlFileName + '.html', html.join('/n') );
+
+/* --------------------------------- */
+
+
+function readFile( path ) {
+  return fs.readFileSync( path, 'utf8');
+}
+
+function writeFile( path, data ) {
+  fs.writeFile( path, data, function(err) {
+      if(err) {
+          console.log(err);
+      } else {
+          console.log("The file was successfully saved!");
+      }
+  });
+}
